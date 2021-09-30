@@ -67,7 +67,6 @@ int main(int argc, const char* argv[]) {
 				addch(' ');
 			}
 		}
-		rectangle(1, 0, maxy - 1, maxx - 1);
 		move(2, 1);
 		// render editor text
 		lines = 0;
@@ -83,34 +82,61 @@ int main(int argc, const char* argv[]) {
 				++ cols;
 			}
 			if ((lines >= scrollY) && (lines-scrollY < maxy)) {
-				if ((i == curp - 1) || ((curp == 0) && (i == 0)))
-					renderCurs = true;
-				else if (renderCurs) {
+				if (i == curp) {
 					attron(COLOR_PAIR(3));
-					attroff(COLOR_PAIR(2));
-					renderCurs = false;
 				}
 				else {
 					attroff(COLOR_PAIR(3));
 					attron(COLOR_PAIR(2));
 				}
-				if ((cols < maxx-1) && (i != fbuf.length()))
-					addch(fbuf[i]);
+				if ((cols < maxx-1) && (i != fbuf.length())) {
+					if (fbuf[i] == 10) {
+						++ lines;
+						move((lines-scrollY)+1, 1);
+					}
+					else
+						addch(fbuf[i]);
+				}
+				if ((cols < maxx-1) && (i == fbuf.length())) {
+					addch(' ');
+				}
 			}
 		}
+		attroff(COLOR_PAIR(3));
+		attron(COLOR_PAIR(2));
+		rectangle(1, 0, maxy - 1, maxx - 1);
+		move(1, 2);
+		printw("%s", fname.c_str());
 		refresh();
 		usleep(1000000/MAX_FPS);
 		in = getch();
 		switch (in) {
-			case 10: default: {
-				if (in >= 32 && in <= 126) {
+			default: {
+				if ((in == 10) || (in >= 32 && in <= 126)) {
 					fbuf.insert(curp, string(1, in));
-
 					++ curp;
 				};
 					
 				break;
-			};
-		};
+			}
+			case KEY_LEFT: {
+				if (curp - 1 != -1) {
+					-- curp;
+				}
+				break;
+			}
+			case KEY_RIGHT: {
+				if (curp + 1 <= fbuf.length()) {
+					++ curp;
+				}
+				break;
+			}
+			case KEY_BACKSPACE: {
+				if (curp-1 != -1) {
+					fbuf.erase(curp-1, 1);
+					-- curp;
+				}
+			}
+		}
 	}
 }
