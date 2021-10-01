@@ -91,8 +91,7 @@ int main(int argc, const char* argv[]) {
 				}
 				if ((cols < maxx-1) && (i != fbuf.length())) {
 					if (fbuf[i] == 10) {
-						++ lines;
-						move((lines-scrollY)+1, 1);
+						move((lines-scrollY)+2, 1);
 					}
 					else
 						addch(fbuf[i]);
