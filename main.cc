@@ -274,6 +274,8 @@ int main(int argc, const char* argv[]) {
 					else if (fbuf[i] == 9) {
 						for (uint8_t i = 0; i<tabWidth; ++i) {
 							addch(' ');
+							attroff(COLOR_PAIR(3));
+							attron(COLOR_PAIR(2));
 						}
 						cols += tabWidth-1;
 					}
