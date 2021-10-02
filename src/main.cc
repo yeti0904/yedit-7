@@ -36,7 +36,7 @@ std::string currentTime() {
 }
 
 void showAlert(string alertc) {
-	bool alert = true;
+	alert = true;
 	alertContent = alertc;
 	alertDuration = 3000;
 }
@@ -130,15 +130,15 @@ int main(int argc, const char* argv[]) {
 		printw("%s", fname.c_str());
 		move(0, maxx-currentTime().length());
 		printw("%s", currentTime().c_str());
-		move(0, 0);
 		if (alert) {
-			move (1, maxy - 1);
+			move (maxy - 1, 1);
 			attron(COLOR_PAIR(4));
 			printw("[ %s ]", alertContent.c_str());
 			alertDuration -= 1000/MAX_FPS;
 			if (alertDuration <= 0)
 				alert = false;
 		}
+		move(0, 0);
 		attroff(COLOR_PAIR(2));
 		attron(COLOR_PAIR(1));
 		printw(APP_NAME " | ");
