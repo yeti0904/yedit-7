@@ -12,3 +12,7 @@ make
 ```
 ./bin/yedit
 ```
+# keybinds
+Control Q : quit<br>
+Control S : save file<br>
+Control H : Enable experimental syntax highlighting
