@@ -75,7 +75,7 @@ int main(int argc, const char* argv[]) {
 
 	initscr();
 	start_color();
-	cbreak();
+	raw();
 	use_default_colors();
 	nodelay(stdscr, true);
 	keypad(stdscr, true);
@@ -192,7 +192,7 @@ int main(int argc, const char* argv[]) {
 				}
 				break;
 			}
-			case ctrl('S'): {
+			case ctrl('s'): {
 				ofile.open(fname);
 				if (true) {
 					ofile << fbuf.c_str();
@@ -200,7 +200,11 @@ int main(int argc, const char* argv[]) {
 					showAlert("Saved buffer to " +fname);
 				}
 				else
-					//showAlert("Error saving file");
+					showAlert("Error saving file");
+				break;
+			}
+			case ctrl('q'): {
+				run = false;
 				break;
 			}
 		}
