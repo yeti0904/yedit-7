@@ -2,12 +2,15 @@
 #include <unistd.h>
 #include <vector>
 #include <string>
+#include <fstream>
 #include <cstdint>
 #include <cstring>
 #include <ctime>
 #include "constants.hh"
 using std::vector;
 using std::string;
+using std::ofstream;
+using std::endl;
 
 #define ctrl(x)    ((x) & 0x1f)
 
@@ -41,6 +44,21 @@ void showAlert(string alertc) {
 	alertDuration = 3000;
 }
 
+bool fexists(string fname) {
+	ofstream file;
+	file.open(fname);
+	if (file.is_open()) {
+		file.close();
+		return true;
+	}
+	else
+		return false;
+}
+
+void fcreate(string fname) {
+	ofstream {fname};
+}
+
 int main(int argc, const char* argv[]) {
 	string fname = "Unnamed";
 	string fbuf = "";
@@ -53,6 +71,7 @@ int main(int argc, const char* argv[]) {
 	string instr = "";
 	uint64_t scrollY = 0;
 	uint64_t lines, cols;
+	ofstream ofile;
 
 	initscr();
 	start_color();
@@ -100,9 +119,8 @@ int main(int argc, const char* argv[]) {
 				++ lines;
 				cols = 0;
 			}
-			else {
+			else
 				++ cols;
-			}
 			if ((lines >= scrollY) && (lines-scrollY < maxy)) {
 				if (i == curp) {
 					attron(COLOR_PAIR(3));
@@ -131,7 +149,7 @@ int main(int argc, const char* argv[]) {
 		move(0, maxx-currentTime().length());
 		printw("%s", currentTime().c_str());
 		if (alert) {
-			move (maxy - 1, 1);
+			move((maxy-1)/2, ((maxx-1)/2)-currentTime().length() - 1);
 			attron(COLOR_PAIR(4));
 			printw("[ %s ]", alertContent.c_str());
 			alertDuration -= 1000/MAX_FPS;
@@ -172,7 +190,21 @@ int main(int argc, const char* argv[]) {
 					fbuf.erase(curp-1, 1);
 					-- curp;
 				}
+				break;
+			}
+			case ctrl('S'): {
+				ofile.open(fname);
+				if (true) {
+					ofile << fbuf.c_str();
+					ofile.close();
+					showAlert("Saved buffer to " +fname);
+				}
+				else
+					//showAlert("Error saving file");
+				break;
 			}
 		}
 	}
+	endwin();
+	return 0;
 }
