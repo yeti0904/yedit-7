@@ -4,11 +4,16 @@
 #include <string>
 #include <cstdint>
 #include <cstring>
+#include <ctime>
 #include "constants.hh"
 using std::vector;
 using std::string;
 
 #define ctrl(x)    ((x) & 0x1f)
+
+bool   alert = false;
+string alertContent;
+int16_t alertDuration;
 
 void rectangle(int y1, int x1, int y2, int x2) {
 	mvhline(y1, x1, 0, x2-x1);
@@ -19,6 +24,21 @@ void rectangle(int y1, int x1, int y2, int x2) {
 	mvaddch(y2, x1, ACS_LLCORNER);
 	mvaddch(y1, x2, ACS_URCORNER);
 	mvaddch(y2, x2, ACS_LRCORNER);
+}
+
+std::string currentTime() {
+	time_t     now = time(0);
+	struct tm  tstruct;
+	char       buf[80];
+	tstruct = *localtime(&now);
+	strftime(buf, sizeof(buf), "%X", &tstruct);
+	return buf;
+}
+
+void showAlert(string alertc) {
+	bool alert = true;
+	alertContent = alertc;
+	alertDuration = 3000;
 }
 
 int main(int argc, const char* argv[]) {
@@ -45,6 +65,9 @@ int main(int argc, const char* argv[]) {
 	init_pair(1, COLOR_BLACK, COLOR_WHITE); // inverted theme
 	init_pair(2, COLOR_WHITE, COLOR_BLUE);
 	init_pair(3, COLOR_BLUE, COLOR_WHITE);
+	init_pair(4, COLOR_BLACK, COLOR_GREEN); // alert
+
+	showAlert("Welcome to YEDIT.");
 
 	while (run) {
 		attroff(A_ALTCHARSET);
@@ -53,9 +76,8 @@ int main(int argc, const char* argv[]) {
 		// render
 		move(0, 0);
 		attron(COLOR_PAIR(1));
-		printw(APP_NAME); // titlebar
-		printw(" | ");
-		for (uint16_t i = 0; i<maxx-strlen(APP_NAME) - 3; ++i) {
+		// titlebar
+		for (uint16_t i = 0; i<maxx - 3; ++i) {
 			addch(' ');
 		}
 		attroff(COLOR_PAIR(1));
@@ -106,6 +128,21 @@ int main(int argc, const char* argv[]) {
 		rectangle(1, 0, maxy - 1, maxx - 1);
 		move(1, 2);
 		printw("%s", fname.c_str());
+		move(0, maxx-currentTime().length());
+		printw("%s", currentTime().c_str());
+		move(0, 0);
+		if (alert) {
+			move (1, maxy - 1);
+			attron(COLOR_PAIR(4));
+			printw("[ %s ]", alertContent.c_str());
+			alertDuration -= 1000/MAX_FPS;
+			if (alertDuration <= 0)
+				alert = false;
+		}
+		attroff(COLOR_PAIR(2));
+		attron(COLOR_PAIR(1));
+		printw(APP_NAME " | ");
+		attroff(COLOR_PAIR(1));
 		refresh();
 		usleep(1000000/MAX_FPS);
 		in = getch();
