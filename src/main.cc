@@ -333,7 +333,7 @@ int main(int argc, const char* argv[]) {
 					++ scrollY;
 				break;
 			}
-			case KEY_BACKSPACE: {
+			case 127: case KEY_BACKSPACE: {
 				if (curp-1 != -1) {
 					fbuf.erase(curp-1, 1);
 					-- curp;
