@@ -14,6 +14,9 @@
 #include "constants.hh"
 #include "editmode.hh"
 #include "fs.hh"
+#include "colour.hh"
+#include "util.hh"
+#include "ui.hh"
 using std::vector;
 using std::string;
 using std::ofstream;
@@ -29,57 +32,10 @@ int16_t alertDuration;
 bool   boxin = false;
 string boxinTitle;
 
-void rectangle(int y1, int x1, int y2, int x2) {
-	mvhline(y1, x1, 0, x2-x1);
-	mvhline(y2, x1, 0, x2-x1);
-	mvvline(y1, x1, 0, y2-y1);
-	mvvline(y1, x2, 0, y2-y1);
-	mvaddch(y1, x1, ACS_ULCORNER);
-	mvaddch(y2, x1, ACS_LLCORNER);
-	mvaddch(y1, x2, ACS_URCORNER);
-	mvaddch(y2, x2, ACS_LRCORNER);
-}
-
-std::string currentTime() {
-	time_t     now = time(0);
-	struct tm  tstruct;
-	char       buf[80];
-	tstruct = *localtime(&now);
-	strftime(buf, sizeof(buf), "%X", &tstruct);
-	return buf;
-}
-
 void showAlert(string alertc) {
 	alert = true;
 	alertContent = alertc;
-	alertDuration = 3000;
-}
-
-bool fexists(string fname) {
-	ofstream file;
-	file.open(fname);
-	if (file.is_open()) {
-		file.close();
-		return true;
-	}
-	else
-		return false;
-}
-
-string fread(string fname) {
-	ifstream fhnd;
-	string line;
-	string ret;
-	fhnd.open(fname);
-	while (getline(fhnd, line)) {
-		ret += line + '\n';
-	}
-	fhnd.close();
-	return ret;
-}
-
-void fcreate(string fname) {
-	ofstream {fname};
+	alertDuration = 3000; // alertDuration is in milliseconds
 }
 
 uint64_t countLines(string buf) {
@@ -91,53 +47,16 @@ uint64_t countLines(string buf) {
 	return ret;
 }
 
-bool strIsNum(string str) { // made by reinhold
-    for (const char& ch : str)
-        if (ch < '0' && ch > '9')
-            return false;
-    return true;
-}
-
-uint8_t strToColour(string buf) {
-	if (buf == "black") {
-		return COLOR_BLACK;
-	}
-	else if (buf == "red") {
-		return COLOR_RED;
-	}
-	else if (buf == "green") {
-		return COLOR_GREEN;
-	}
-	else if (buf == "yellow") {
-		return COLOR_YELLOW;
-	}
-	else if (buf == "blue") {
-		return COLOR_BLUE;
-	}
-	else if (buf == "magenta") {
-		return COLOR_MAGENTA;
-	}
-	else if (buf == "cyan") {
-		return COLOR_CYAN;
-	}
-	else if (buf == "white") {
-		return COLOR_WHITE;
-	}
-	else {
-		return COLOR_WHITE;
-	}
-}
-
 int main(int argc, const char* argv[]) {
 	string   fname = "Unnamed";
 	char     fnamec;
 	string   fbuf = "";
 	uint16_t maxx, maxy;
-	bool     run = true;
+	bool     run = true; // condition for run loop
 	bool     renderCurs;
-	uint64_t curp = 0;
+	uint64_t curp = 0;   // cursor position in file buffer
 	uint16_t curx = 0, cury = 0;
-	uint16_t in;
+	uint16_t in;         // input is temporarily stored here
 	string   instr = "";
 	uint64_t scrollY = 0;
 	uint64_t lines, cols;
@@ -147,10 +66,11 @@ int main(int argc, const char* argv[]) {
 	bool     syntaxHighlighting = false;
 	bool     inString;
 	string   temp;
+	bool     renderedCursor;
 
-	vector <string> args;
+	vector <string> args; // command line arguments
 	for (uint16_t i = 0; i<argc; ++i) {
-		args.push_back(argv[i]);
+		args.push_back(argv[i]); // convert argv into std::vector<std::string>
 	}
 
 	// process args
@@ -162,6 +82,15 @@ int main(int argc, const char* argv[]) {
 		else {
 			if (args[i] == "--version") {
 				printf(APP_NAME "\n");
+				return 0;
+			}
+			else if (args[i] == "--help") {
+				printf(APP_NAME " help\n");
+				for (uint8_t i = 0; i<=strlen(APP_NAME "help"); ++i) {
+					putchar('=');
+				}
+				putchar(10);
+				printf("Control Q: Quit yedit\nControl S: Save file buffer\nControl H: Enable experimental syntax highlighting\n");
 				return 0;
 			}
 		}
@@ -268,8 +197,15 @@ int main(int argc, const char* argv[]) {
 					}
 				}
 				if ((cols < maxx-1) && (i != fbuf.length())) {
-					if (fbuf[i] == 10) {
+					if (fbuf[i] == 10)
 						move((lines-scrollY)+2, 1);
+					else if (fbuf[i] == 9) {
+						for (uint8_t i = 0; i<tabWidth; ++i) {
+							addch(' ');
+							attroff(COLOR_PAIR(3));
+							attron(COLOR_PAIR(2));
+						}
+						cols += tabWidth-1;
 					}
 					else
 						addch(fbuf[i]);
@@ -304,7 +240,7 @@ int main(int argc, const char* argv[]) {
 		in = getch();
 		switch (in) {
 			default: {
-				if ((in == 10) || (in >= 32 && in <= 126)) {
+				if ((in == 10) || (in == 9) || (in >= 32 && in <= 126)) {
 					fbuf.insert(curp, string(1, in));
 					++ curp;
 				};
