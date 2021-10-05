@@ -129,7 +129,7 @@ int main(int argc, const char* argv[]) {
 		titlebar_fore = COLOR_BLACK;
 		alert_fore    = COLOR_BLACK;
 		alert_back    = COLOR_GREEN;
-		tabwidth      = 4;
+		tabWidth      = 4;
 	}
 	h_int         = COLOR_CYAN;
 	h_str         = COLOR_GREEN;
