@@ -3,6 +3,7 @@
 #endif
 #include <ncurses.h>
 #include <unistd.h>
+#include <inicxx.hh>
 #include <vector>
 #include <string>
 #include <fstream>
@@ -62,7 +63,7 @@ int main(int argc, const char* argv[]) {
 	uint64_t lines, cols;
 	ofstream ofile;
 	editMode emode = mode_txt;
-	uint8_t  tabWidth = 4;
+	uint8_t  tabWidth;
 	bool     syntaxHighlighting = false;
 	bool     inString;
 	string   temp;
@@ -96,6 +97,42 @@ int main(int argc, const char* argv[]) {
 		}
 	}
 
+	// theme
+	uint8_t editor_back;
+	uint8_t editor_fore;
+	uint8_t titlebar_back;
+	uint8_t titlebar_fore;
+	uint8_t alert_fore;
+	uint8_t alert_back;
+	uint8_t h_int;
+	uint8_t h_str;
+
+	INI::Structure settings;
+
+
+	// settings
+	//if (o_fexists((std::string) getenv("HOME") + "/.config/yedit/yedit.ini")) {
+	if (false) {
+		settings.Parse(fread("~/.config/yedit/yedit.ini"));
+		editor_back   = settings.AsInteger("appearance", "editor_b");
+		editor_fore   = settings.AsInteger("appearance", "editor_f");
+		titlebar_back = settings.AsInteger("appearance", "titlebar_b");
+		titlebar_fore = settings.AsInteger("appearance", "titlebar_f");
+		alert_back    = settings.AsInteger("appearance", "alert_b");
+		alert_fore    = settings.AsInteger("appearance", "alert_f");
+		tabWidth      = settings.AsInteger("editor", "tab-width");
+	}
+	else {
+		editor_back   = COLOR_BLUE;
+		editor_fore   = COLOR_WHITE;
+		titlebar_back = COLOR_WHITE;
+		titlebar_fore = COLOR_BLACK;
+		alert_fore    = COLOR_BLACK;
+		alert_back    = COLOR_GREEN;
+	}
+	h_int         = COLOR_CYAN;
+	h_str         = COLOR_GREEN;
+
 	initscr();
 	start_color();
 	raw();
@@ -112,16 +149,6 @@ int main(int argc, const char* argv[]) {
 	}
 
 	nodelay(stdscr, true);
-
-	// theme
-	uint8_t editor_back   = COLOR_BLUE;
-	uint8_t editor_fore   = COLOR_WHITE;
-	uint8_t titlebar_back = COLOR_WHITE;
-	uint8_t titlebar_fore = COLOR_BLACK;
-	uint8_t alert_fore    = COLOR_BLACK;
-	uint8_t alert_back    = COLOR_GREEN;
-	uint8_t h_int         = COLOR_CYAN;
-	uint8_t h_str         = COLOR_GREEN;
 	
 
 	init_pair(1, titlebar_fore, titlebar_back);
@@ -157,6 +184,7 @@ int main(int argc, const char* argv[]) {
 		// render editor text
 		lines = 0;
 		cols  = 0;
+		attroff(COLOR_PAIR(3));
 		attron(COLOR_PAIR(2));
 		renderCurs = false;
 		inString = false;
@@ -168,12 +196,13 @@ int main(int argc, const char* argv[]) {
 			else
 				++ cols;
 			if ((lines >= scrollY) && (lines-scrollY < maxy)) {
-				if (i == curp) {
+				if ((i == curp) && (!renderCurs)) {
 					attroff(COLOR_PAIR(5));
 					attroff(COLOR_PAIR(6));
 					attron(COLOR_PAIR(3));
 					if ((fbuf[i] == '"') || (fbuf[i] == '\''))
 						inString = false;
+					renderCurs = true;
 				}
 				else {
 					attroff(COLOR_PAIR(3));
@@ -197,18 +226,34 @@ int main(int argc, const char* argv[]) {
 					}
 				}
 				if ((cols < maxx-1) && (i != fbuf.length())) {
-					if (fbuf[i] == 10)
-						move((lines-scrollY)+2, 1);
-					else if (fbuf[i] == 9) {
-						for (uint8_t i = 0; i<tabWidth; ++i) {
-							addch(' ');
-							attroff(COLOR_PAIR(3));
-							attron(COLOR_PAIR(2));
+					switch (fbuf[i]) {
+						case 10: {
+							if (i == curp) {
+								attroff(COLOR_PAIR(5));
+								attroff(COLOR_PAIR(6));
+								attron(COLOR_PAIR(3));
+								addch(' ');
+								attroff(COLOR_PAIR(3));
+								attron(COLOR_PAIR(2));
+								renderCurs = true;
+							}
+							move((lines-scrollY)+2, 1);
+							break;
 						}
-						cols += tabWidth-1;
+						case 9: {
+							for (uint8_t i = 0; i<tabWidth; ++i) {
+								addch(' ');
+								attroff(COLOR_PAIR(3));
+								attron(COLOR_PAIR(2));
+							}
+							cols += tabWidth-1;
+							break;
+						}
+						default: {
+							addch(fbuf[i]);
+							break;
+						}
 					}
-					else
-						addch(fbuf[i]);
 				}
 				if ((cols < maxx-1) && (i == fbuf.length())) {
 					addch(' ');
@@ -239,6 +284,10 @@ int main(int argc, const char* argv[]) {
 		usleep(1000000/MAX_FPS);
 		in = getch();
 		switch (in) {
+			case 10: {
+				if (countLines(fbuf.substr(0, curp))-scrollY >= maxy-2)
+					++ scrollY;
+			}
 			default: {
 				if ((in == 10) || (in == 9) || (in >= 32 && in <= 126)) {
 					fbuf.insert(curp, string(1, in));

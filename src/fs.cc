@@ -39,6 +39,10 @@ bool fexists(string fname) {
 		return false;
 }
 
+bool o_fexists(string fname) {
+	return (access(fname.c_str(), F_OK) == 0);
+}
+
 string fread(string fname) {
 	ifstream fhnd;
 	string line;
