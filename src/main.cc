@@ -18,6 +18,8 @@
 #include "colour.hh"
 #include "util.hh"
 #include "ui.hh"
+#include "win.hh"
+#include "ui.hh"
 using std::vector;
 using std::string;
 using std::ofstream;
@@ -68,6 +70,7 @@ int main(int argc, const char* argv[]) {
 	bool     inString;
 	string   temp;
 	bool     renderedCursor;
+	bool     renderHelpMenu;
 
 	vector <string> args; // command line arguments
 	for (uint16_t i = 0; i<argc; ++i) {
@@ -104,11 +107,16 @@ int main(int argc, const char* argv[]) {
 	uint8_t titlebar_fore;
 	uint8_t alert_fore;
 	uint8_t alert_back;
+	uint8_t win_back;
+	uint8_t win_fore;
+	uint8_t win_close;
 	uint8_t h_int;
 	uint8_t h_str;
 
 	INI::Structure settings;
 
+	// windows
+	ui_window test = newWindow(5, 5, 20, 3, "hello");
 
 	// settings
 	//if (o_fexists((std::string) getenv("HOME") + "/.config/yedit/yedit.ini")) {
@@ -129,9 +137,17 @@ int main(int argc, const char* argv[]) {
 		titlebar_fore = COLOR_BLACK;
 		alert_fore    = COLOR_BLACK;
 		alert_back    = COLOR_GREEN;
+		win_back      = COLOR_WHITE;
+		win_fore      = COLOR_BLACK;
+		win_close     = COLOR_RED;
+		tabWidth      = 4;
 	}
 	h_int         = COLOR_CYAN;
 	h_str         = COLOR_GREEN;
+
+	// make windows
+	ui_window helpMenu = newWindow(0, 0, 20, 7, "help");
+	printOnWindow(helpMenu, "yedit keybinds\ncontrol s: save\ncontrol q: quit\ncontrol g:\nsyntax highlighting");
 
 	initscr();
 	start_color();
@@ -157,6 +173,8 @@ int main(int argc, const char* argv[]) {
 	init_pair(4, alert_fore, alert_back);
 	init_pair(5, h_int, editor_back);
 	init_pair(6, h_str, editor_back);
+	init_pair(7, win_fore, win_back);
+	init_pair(8, win_close, win_back);
 
 	showAlert("Welcome to YEDIT.");
 
@@ -263,7 +281,7 @@ int main(int argc, const char* argv[]) {
 		attroff(COLOR_PAIR(3));
 		attron(COLOR_PAIR(2));
 		rectangle(1, 0, maxy - 1, maxx - 1);
-		move(1, 2);
+		move(1, 1);
 		printw("%s", fname.c_str());
 		move(0, maxx-currentTime().length());
 		printw("%s", currentTime().c_str());
@@ -280,8 +298,14 @@ int main(int argc, const char* argv[]) {
 		attron(COLOR_PAIR(1));
 		printw(APP_NAME " | ");
 		attroff(COLOR_PAIR(1));
+		// render windows
+		if (renderHelpMenu) {
+			moveWindow(helpMenu, maxx-22, maxy - helpMenu.h - 2);
+			renderWindow(helpMenu);
+		}
 		refresh();
 		usleep(1000000/MAX_FPS);
+		// now input
 		in = getch();
 		switch (in) {
 			case 10: {
@@ -340,12 +364,16 @@ int main(int argc, const char* argv[]) {
 				run = false;
 				break;
 			}
-			case ctrl('h'): {
+			case ctrl('g'): {
 				syntaxHighlighting = !syntaxHighlighting;
 				if (syntaxHighlighting)
 					showAlert("Enabled syntax highlighting");
 				else
 					showAlert("Disabled syntax highlighting");
+				break;
+			}
+			case ctrl('h'): {
+				renderHelpMenu = !renderHelpMenu;
 				break;
 			}
 		}
