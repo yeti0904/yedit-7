@@ -15,4 +15,5 @@ make
 # keybinds
 Control Q : quit<br>
 Control S : save file<br>
-Control H : Enable experimental syntax highlighting
+Control G : Enable experimental syntax highlighting
+Control H : Show help menu
