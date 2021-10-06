@@ -21,7 +21,7 @@ bool strIsNum(string str) { // made by reinhold
 	return true;
 }
 
-bool settingsExist(const INI::Structure &settings) {
+/*bool settingsExist(const INI::Structure &settings) {
 	vector <string> appearance_props = {
 		"editor_b",
 		"editor_f",
@@ -47,3 +47,4 @@ bool settingsExist(const INI::Structure &settings) {
 		return false;
 	return true;
 }
+*/
