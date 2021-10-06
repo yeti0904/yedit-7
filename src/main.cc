@@ -112,14 +112,14 @@ int main(int argc, const char* argv[]) {
 	uint8_t h_int;
 	uint8_t h_str;
 
-	INI::Structure settings;
+	//INI::Structure settings;
 
 	// windows
 	ui_window test = newWindow(5, 5, 20, 3, "hello");
 
 	// settings
 	//if (o_fexists((std::string) getenv("HOME") + "/.config/yedit/yedit.ini")) {
-	if (false) {
+	if (false) { /*
 		settings.Parse(fread("~/.config/yedit/yedit.ini"));
 		editor_back   = settings.AsInteger("appearance", "editor_b");
 		editor_fore   = settings.AsInteger("appearance", "editor_f");
@@ -127,7 +127,7 @@ int main(int argc, const char* argv[]) {
 		titlebar_fore = settings.AsInteger("appearance", "titlebar_f");
 		alert_back    = settings.AsInteger("appearance", "alert_b");
 		alert_fore    = settings.AsInteger("appearance", "alert_f");
-		tabWidth      = settings.AsInteger("editor", "tab-width");
+		tabWidth      = settings.AsInteger("editor", "tab-width"); */
 	}
 	else {
 		editor_back   = COLOR_BLUE;
