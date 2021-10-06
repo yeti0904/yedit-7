@@ -3,7 +3,6 @@
 #endif
 #include <ncurses.h>
 #include <unistd.h>
-#include <inicxx.hh>
 #include <vector>
 #include <string>
 #include <fstream>
