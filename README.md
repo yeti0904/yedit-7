@@ -1,6 +1,12 @@
 # yedit
 A text editor made with ncurses and C++
 <img src="https://server.mesyeti.uk/pictures/yedit7.png">
+# dependencies
+∙ ncurses
+<br> in Debian you can install dependencies with this command:
+```sh
+# apt install libncurses5-dev
+```
 # compile
 ```
 git clone https://github.com/MESYETI/yedit
