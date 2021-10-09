@@ -88,12 +88,12 @@ class ui_window {
 		move(y, x + 1);
 		printw(title.c_str());
 		move(y, (x+w)-3);
-		addch(ACS_RTEE);
+		addch('[');
 		attron(COLOR_PAIR(8));
 		addch(ACS_DIAMOND);
 		attroff(COLOR_PAIR(8));
 		attron(COLOR_PAIR(7));
-		addch(ACS_LTEE);
+		addch(']');
 		attroff(COLOR_PAIR(7));
 	}
 };
