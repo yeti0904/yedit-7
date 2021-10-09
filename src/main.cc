@@ -53,23 +53,23 @@ int main(int argc, const char* argv[]) {
 	string   fname = "Unnamed";
 	char     fnamec;
 	string   fbuf = "";
-	uint16_t maxx, maxy;
+	uint16_t maxx = 0, maxy = 0;
 	bool     run = true; // condition for run loop
 	bool     renderCurs;
 	uint64_t curp = 0;   // cursor position in file buffer
 	uint16_t curx = 0, cury = 0;
 	uint16_t in;         // input is temporarily stored here
-	string   instr = "";
+	string   instr;
 	uint64_t scrollY = 0;
 	uint64_t lines, cols;
 	ofstream ofile;
 	editMode emode = mode_txt;
-	uint8_t  tabWidth;
+	uint8_t  tabWidth = 4;
 	bool     syntaxHighlighting = false;
-	bool     inString;
+	bool     inString = false;
 	string   temp;
-	bool     renderedCursor;
-	bool     renderHelpMenu;
+	bool     renderedCursor = false;
+	bool     renderHelpMenu = false;
 
 	vector <string> args; // command line arguments
 	for (uint16_t i = 0; i<argc; ++i) {
@@ -114,9 +114,6 @@ int main(int argc, const char* argv[]) {
 
 	//INI::Structure settings;
 
-	// windows
-	ui_window test = newWindow(5, 5, 20, 3, "hello");
-
 	// settings
 	//if (o_fexists((std::string) getenv("HOME") + "/.config/yedit/yedit.ini")) {
 	if (false) { /*
@@ -145,8 +142,9 @@ int main(int argc, const char* argv[]) {
 	h_str         = COLOR_GREEN;
 
 	// make windows
-	ui_window helpMenu = newWindow(0, 0, 20, 7, "help");
-	printOnWindow(helpMenu, "yedit keybinds\ncontrol s: save\ncontrol q: quit\ncontrol g:\nsyntax highlighting");
+	ui_window helpMenu; // = newWindow(0, 0, 20, 7, "help");
+	helpMenu.create(0, 0, 20, 7, "help");
+	helpMenu.print("yedit keybinds\ncontrol s: save\ncontrol q: quit\ncontrol g:\nsyntax highlighting");
 
 	initscr();
 	start_color();
@@ -174,6 +172,7 @@ int main(int argc, const char* argv[]) {
 	init_pair(6, h_str, editor_back);
 	init_pair(7, win_fore, win_back);
 	init_pair(8, win_close, win_back);
+	init_pair(9, COLOR_BLACK, COLOR_BLACK);
 
 	showAlert("Welcome to YEDIT.");
 
@@ -299,8 +298,8 @@ int main(int argc, const char* argv[]) {
 		attroff(COLOR_PAIR(1));
 		// render windows
 		if (renderHelpMenu) {
-			moveWindow(helpMenu, maxx-22, maxy - helpMenu.h - 2);
-			renderWindow(helpMenu);
+			helpMenu.Move(maxx-22, maxy - helpMenu.h - 2);
+			helpMenu.render();
 		}
 		refresh();
 		usleep(1000000/MAX_FPS);
