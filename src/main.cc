@@ -55,7 +55,7 @@ void createDefaultConfig() {
 	ofstream fhnd;
 	fhnd.open((std::string) getenv("HOME") + "/.config/yedit/yedit.ini");
 	if (true) {
-		fhnd << "[appearance]\n"
+		fhnd << "[appearence]\n"
 				"; colour guide\n"
 				"; 0 = black\n"
 				"; 1 = red\n"

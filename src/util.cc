@@ -23,7 +23,7 @@ bool strIsNum(string str) { // made by reinhold
 }
 
 bool settingsExist(const INI::Structure &settings) {
-	vector <string> appearance_props = {
+	vector <string> appearence_props = {
 		"editor_b",
 		"editor_f",
 		"titlebar_b",
@@ -34,9 +34,9 @@ bool settingsExist(const INI::Structure &settings) {
 	vector <string> editor_props = {
 		"tab-width"
 	};
-	if (settings.Contains("appearance") && settings.Contains("editor")) {
+	if (settings.Contains("appearence") && settings.Contains("editor")) {
 		for (int i = 0; i<appearance_props.size(); ++i) {
-			if (!settings.Contains("appearance", appearance_props[i]))
+			if (!settings.Contains("appearence", appearence_props[i]))
 				return false;
 		}
 		for (int i = 0; i<editor_props.size(); ++i) {
