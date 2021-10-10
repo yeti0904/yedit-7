@@ -1,8 +1,6 @@
 #ifdef _WIN32
 	#error yedit does not support windows
 #endif
-#include <ncurses.h>
-#include <unistd.h>
 #include <vector>
 #include <string>
 #include <fstream>
@@ -11,6 +9,9 @@
 #include <cstdint>
 #include <cstring>
 #include <ctime>
+#include <ncurses.h>
+#include <unistd.h>
+#include <inicxx.hh>
 #include "constants.hh"
 #include "editmode.hh"
 #include "fs.hh"
@@ -49,27 +50,56 @@ uint64_t countLines(string buf) {
 	return ret;
 }
 
+void createDefaultConfig() {
+	pcreate((std::string)getenv("HOME") +"/.config/yedit");
+	ofstream fhnd;
+	fhnd.open((std::string) getenv("HOME") + "/.config/yedit/yedit.ini");
+	if (true) {
+		fhnd << "[appearance]\n"
+				"; colour guide\n"
+				"; 0 = black\n"
+				"; 1 = red\n"
+				"; 2 = green\n"
+				"; 3 = yellow\n"
+				"; 4 = blue\n"
+				"; 5 = magenta\n"
+				"; 6 = cyan\n"
+				"; 7 = white\n"
+				"editor_b=4\n"
+				"editor_f=7\n"
+				"titlebar_b=7\n"
+				"titlebar_f=0\n"
+				"alert_b=2\n"
+				"alert_f=0\n"
+				"\n"
+				"[editor]\n"
+				"tab-width=4\n";
+		fhnd.close();
+	}
+}
+
 int main(int argc, const char* argv[]) {
-	string   fname = "Unnamed";
+	string   fname              = "Unnamed";
 	char     fnamec;
-	string   fbuf = "";
+	string   fbuf;
 	uint16_t maxx = 0, maxy = 0;
-	bool     run = true; // condition for run loop
+	bool     run                = true; // condition for run loop
 	bool     renderCurs;
-	uint64_t curp = 0;   // cursor position in file buffer
-	uint16_t curx = 0, cury = 0;
-	uint16_t in;         // input is temporarily stored here
+	uint64_t curp               = 0;    // cursor position in file buffer
+	uint16_t curx               = 0, cury = 0;
+	uint16_t in;                        // input is temporarily stored here
 	string   instr;
-	uint64_t scrollY = 0;
+	uint64_t scrollY            = 0;
 	uint64_t lines, cols;
 	ofstream ofile;
-	editMode emode = mode_txt;
-	uint8_t  tabWidth = 4;
+	editMode emode              = mode_txt;
+	uint8_t  tabWidth           = 4;
 	bool     syntaxHighlighting = false;
-	bool     inString = false;
+	bool     inString           = false;
 	string   temp;
-	bool     renderedCursor = false;
-	bool     renderHelpMenu = false;
+	bool     renderedCursor     = false;
+	bool     renderHelpMenu     = false;
+	size_t   frames             = 0;
 
 	vector <string> args; // command line arguments
 	for (uint16_t i = 0; i<argc; ++i) {
@@ -112,21 +142,32 @@ int main(int argc, const char* argv[]) {
 	uint8_t h_int;
 	uint8_t h_str;
 
-	//INI::Structure settings;
+	INI::Structure settings;
+
+	string err;
 
 	// settings
-	//if (o_fexists((std::string) getenv("HOME") + "/.config/yedit/yedit.ini")) {
-	if (false) { /*
-		settings.Parse(fread("~/.config/yedit/yedit.ini"));
+	if (o_fexists((std::string) getenv("HOME") + "/.config/yedit/yedit.ini")) {
+		try {
+			settings.Parse(fread((std::string) getenv("HOME") +"/.config/yedit/yedit.ini"));
+		} catch (const INI::ParserException& Error) {
+			printf("Broken yedit.ini\n");
+			exit(2);
+		}
+		if (!settingsExist(settings)) {
+			printf("Non-existant required properties in yedit.ini\n");
+			exit(1);
+		}
 		editor_back   = settings.AsInteger("appearance", "editor_b");
 		editor_fore   = settings.AsInteger("appearance", "editor_f");
 		titlebar_back = settings.AsInteger("appearance", "titlebar_b");
 		titlebar_fore = settings.AsInteger("appearance", "titlebar_f");
 		alert_back    = settings.AsInteger("appearance", "alert_b");
 		alert_fore    = settings.AsInteger("appearance", "alert_f");
-		tabWidth      = settings.AsInteger("editor", "tab-width"); */
+		tabWidth      = settings.AsInteger("editor", "tab-width");
 	}
 	else {
+		createDefaultConfig();
 		editor_back   = COLOR_BLUE;
 		editor_fore   = COLOR_WHITE;
 		titlebar_back = COLOR_WHITE;
@@ -279,10 +320,12 @@ int main(int argc, const char* argv[]) {
 		attroff(COLOR_PAIR(3));
 		attron(COLOR_PAIR(2));
 		rectangle(1, 0, maxy - 1, maxx - 1);
+		// titlebar
 		move(1, 1);
 		printw("%s", fname.c_str());
 		move(0, maxx-currentTime().length());
 		printw("%s", currentTime().c_str());
+		// render alerts if there is one
 		if (alert) {
 			move((maxy-1)/2, ((maxx-1)/2)-currentTime().length() - 1);
 			attron(COLOR_PAIR(4));
@@ -291,6 +334,7 @@ int main(int argc, const char* argv[]) {
 			if (alertDuration <= 0)
 				alert = false;
 		}
+		// titlebar
 		move(0, 0);
 		attroff(COLOR_PAIR(2));
 		attron(COLOR_PAIR(1));
@@ -301,6 +345,7 @@ int main(int argc, const char* argv[]) {
 			helpMenu.Move(maxx-22, maxy - helpMenu.h - 2);
 			helpMenu.render();
 		}
+		++ frames;
 		refresh();
 		usleep(1000000/MAX_FPS);
 		// now input

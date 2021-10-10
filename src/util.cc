@@ -2,6 +2,7 @@
 #include <vector>
 #include <ctime>
 #include <cstring>
+#include <inicxx.hh>
 using std::string;
 using std::vector;
 
@@ -21,7 +22,7 @@ bool strIsNum(string str) { // made by reinhold
 	return true;
 }
 
-/*bool settingsExist(const INI::Structure &settings) {
+bool settingsExist(const INI::Structure &settings) {
 	vector <string> appearance_props = {
 		"editor_b",
 		"editor_f",
@@ -47,4 +48,3 @@ bool strIsNum(string str) { // made by reinhold
 		return false;
 	return true;
 }
-*/
