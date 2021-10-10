@@ -117,6 +117,12 @@ int main(int argc, const char* argv[]) {
 				printf(APP_NAME "\n");
 				return 0;
 			}
+			else if (args[i] == "--restoreconfig") {
+				printf("Restoring..");
+				createDefaultConfig();
+				printf("\rRestored config to %s/.config/yedit/yedit.ini\n", getenv("HOME"));
+				exit(0);
+			}
 			else if (args[i] == "--help") {
 				printf(APP_NAME " help\n");
 				for (uint8_t i = 0; i<=strlen(APP_NAME "help"); ++i) {
@@ -158,12 +164,12 @@ int main(int argc, const char* argv[]) {
 			printf("Non-existant required properties in yedit.ini\n");
 			exit(1);
 		}
-		editor_back   = settings.AsInteger("appearance", "editor_b");
-		editor_fore   = settings.AsInteger("appearance", "editor_f");
-		titlebar_back = settings.AsInteger("appearance", "titlebar_b");
-		titlebar_fore = settings.AsInteger("appearance", "titlebar_f");
-		alert_back    = settings.AsInteger("appearance", "alert_b");
-		alert_fore    = settings.AsInteger("appearance", "alert_f");
+		editor_back   = settings.AsInteger("appearence", "editor_b");
+		editor_fore   = settings.AsInteger("appearence", "editor_f");
+		titlebar_back = settings.AsInteger("appearence", "titlebar_b");
+		titlebar_fore = settings.AsInteger("appearence", "titlebar_f");
+		alert_back    = settings.AsInteger("appearence", "alert_b");
+		alert_fore    = settings.AsInteger("appearence", "alert_f");
 		tabWidth      = settings.AsInteger("editor", "tab-width");
 	}
 	else {
