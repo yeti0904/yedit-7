@@ -35,7 +35,7 @@ bool settingsExist(const INI::Structure &settings) {
 		"tab-width"
 	};
 	if (settings.Contains("appearence") && settings.Contains("editor")) {
-		for (int i = 0; i<appearance_props.size(); ++i) {
+		for (int i = 0; i<appearence_props.size(); ++i) {
 			if (!settings.Contains("appearence", appearence_props[i]))
 				return false;
 		}
