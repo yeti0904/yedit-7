@@ -340,7 +340,7 @@ int main(int argc, const char* argv[]) {
 		printw("%s", currentTime().c_str());
 		// render alerts if there is one
 		if (alert) {
-			move((maxy-1)/2, ((maxx-1)/2)-currentTime().length() - 1);
+			move((maxy-1)/2, (maxx/2)-(alertContent.length()/2));
 			attron(COLOR_PAIR(4));
 			printw("[ %s ]", alertContent.c_str());
 			alertDuration -= 1000/MAX_FPS;
