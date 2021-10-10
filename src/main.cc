@@ -453,6 +453,16 @@ int main(int argc, const char* argv[]) {
 						alert_back    = settings.AsInteger("appearence", "alert_b");
 						alert_fore    = settings.AsInteger("appearence", "alert_f");
 						tabWidth      = settings.AsInteger("editor", "tab-width");
+						init_pair(1, titlebar_fore, titlebar_back);
+						init_pair(2, editor_fore, editor_back);
+						init_pair(3, editor_back, editor_fore);
+						init_pair(4, alert_fore, alert_back);
+						init_pair(5, h_int, editor_back);
+						init_pair(6, h_str, editor_back);
+						init_pair(7, win_fore, win_back);
+						init_pair(8, win_close, win_back);
+						init_pair(9, COLOR_BLACK, COLOR_BLACK);
+						showAlert("Refreshed config");
 					}
 				}
 				else {
