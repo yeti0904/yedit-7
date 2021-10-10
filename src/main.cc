@@ -24,6 +24,7 @@ using std::vector;
 using std::string;
 using std::ofstream;
 using std::ifstream;
+using std::to_string;
 using std::endl;
 
 #define ctrl(x)    ((x) & 0x1f)
@@ -180,18 +181,18 @@ int main(int argc, const char* argv[]) {
 		titlebar_fore = COLOR_BLACK;
 		alert_fore    = COLOR_BLACK;
 		alert_back    = COLOR_GREEN;
-		win_back      = COLOR_WHITE;
-		win_fore      = COLOR_BLACK;
-		win_close     = COLOR_RED;
 		tabWidth      = 4;
 	}
+	win_back      = COLOR_WHITE;
+	win_fore      = COLOR_BLACK;
+	win_close     = COLOR_RED;
 	h_int         = COLOR_CYAN;
 	h_str         = COLOR_GREEN;
 
 	// make windows
 	ui_window helpMenu; // = newWindow(0, 0, 20, 7, "help");
-	helpMenu.create(0, 0, 20, 7, "help");
-	helpMenu.print("yedit keybinds\ncontrol s: save\ncontrol q: quit\ncontrol g:\nsyntax highlighting");
+	helpMenu.create(0, 0, 20, 8, "help");
+	helpMenu.print("yedit keybinds\ncontrol s: save\ncontrol q: quit\ncontrol g:\nsyntax highlighting\ncontrol r: refresh\nconfig");
 
 	initscr();
 	start_color();
@@ -260,6 +261,8 @@ int main(int argc, const char* argv[]) {
 				++ cols;
 			if ((lines >= scrollY) && (lines-scrollY < maxy)) {
 				if ((i == curp) && (!renderCurs)) {
+					curx = cols - 1;
+					cury = lines;
 					attroff(COLOR_PAIR(5));
 					attroff(COLOR_PAIR(6));
 					attron(COLOR_PAIR(3));
@@ -326,6 +329,10 @@ int main(int argc, const char* argv[]) {
 		attroff(COLOR_PAIR(3));
 		attron(COLOR_PAIR(2));
 		rectangle(1, 0, maxy - 1, maxx - 1);
+		// bottom bar
+		temp = "(" +to_string(curx) +":" +to_string(cury) + ")";
+		move(maxy-1, maxx-1-temp.length());
+		printw(temp.c_str());
 		// titlebar
 		move(1, 1);
 		printw("%s", fname.c_str());
@@ -424,6 +431,33 @@ int main(int argc, const char* argv[]) {
 			case ctrl('h'): {
 				renderHelpMenu = !renderHelpMenu;
 				break;
+			}
+			case ctrl('r'): {
+				if (o_fexists((std::string) getenv("HOME") + "/.config/yedit/yedit.ini")) {
+					bool err = false;
+					try {
+						settings.Parse(fread((std::string) getenv("HOME") +"/.config/yedit/yedit.ini"));
+					} catch (const INI::ParserException& Error) {
+						showAlert("Broken yedit.ini\n");
+						err = true;
+					}
+					if (!settingsExist(settings)) {
+						showAlert("Non-existant required properties in yedit.ini\n");
+						err = true;
+					}
+					if (!err) {
+						editor_back   = settings.AsInteger("appearence", "editor_b");
+						editor_fore   = settings.AsInteger("appearence", "editor_f");
+						titlebar_back = settings.AsInteger("appearence", "titlebar_b");
+						titlebar_fore = settings.AsInteger("appearence", "titlebar_f");
+						alert_back    = settings.AsInteger("appearence", "alert_b");
+						alert_fore    = settings.AsInteger("appearence", "alert_f");
+						tabWidth      = settings.AsInteger("editor", "tab-width");
+					}
+				}
+				else {
+					showAlert("yedit.ini not found");
+				}
 			}
 		}
 	}
