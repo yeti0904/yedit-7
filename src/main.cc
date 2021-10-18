@@ -473,7 +473,7 @@ int main(int argc, const char* argv[]) {
 						fbuf = fread(lfname);
 						curp = 0;
 						curx = 0;
-						showAlert("Created new file" +fname);
+						showAlert("Created new file " +fname);
 					}
 				};
 
