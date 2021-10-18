@@ -9,4 +9,5 @@ define things like this
 }
 ```
 use camel case for function names<br>
-macros must have all caps (except for ones that act like functions)
+macros must have all caps (except for ones that look like functions)
+only use 1 blank line at a time
