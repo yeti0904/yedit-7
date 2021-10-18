@@ -29,14 +29,9 @@ void pcreate(string pname) {
 }
 
 bool fexists(string fname) {
-	ofstream file;
-	file.open(fname);
-	if (file.is_open()) {
-		file.close();
-		return true;
-	}
-	else
-		return false;
+	ifstream fhnd(fname);
+
+	return fhnd.good();
 }
 
 bool o_fexists(string fname) {

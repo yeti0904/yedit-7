@@ -19,6 +19,7 @@
 #include "util.hh"
 #include "ui.hh"
 #include "win.hh"
+#include "txtbar.hh"
 #include "ui.hh"
 using std::vector;
 using std::string;
@@ -72,6 +73,8 @@ void createDefaultConfig() {
 				"titlebar_f=0\n"
 				"alert_b=2\n"
 				"alert_f=0\n"
+				"time_b=4\n"
+				"time_f=7\n"
 				"\n"
 				"[editor]\n"
 				"tab-width=4\n";
@@ -101,6 +104,7 @@ int main(int argc, const char* argv[]) {
 	bool     renderedCursor     = false;
 	bool     renderHelpMenu     = false;
 	size_t   frames             = 0;
+	bool     dialogInFocus      = false;
 
 	vector <string> args; // command line arguments
 	for (uint16_t i = 0; i<argc; ++i) {
@@ -143,6 +147,8 @@ int main(int argc, const char* argv[]) {
 	uint8_t titlebar_fore;
 	uint8_t alert_fore;
 	uint8_t alert_back;
+	uint8_t time_fore;
+	uint8_t time_back;
 	uint8_t win_back;
 	uint8_t win_fore;
 	uint8_t win_close;
@@ -171,6 +177,8 @@ int main(int argc, const char* argv[]) {
 		titlebar_fore = settings.AsInteger("appearence", "titlebar_f");
 		alert_back    = settings.AsInteger("appearence", "alert_b");
 		alert_fore    = settings.AsInteger("appearence", "alert_f");
+		time_back     = settings.AsInteger("appearence", "time_b");
+		time_fore     = settings.AsInteger("appearence", "time_f");
 		tabWidth      = settings.AsInteger("editor", "tab-width");
 	}
 	else {
@@ -194,6 +202,13 @@ int main(int argc, const char* argv[]) {
 	helpMenu.create(0, 0, 20, 8, "help");
 	helpMenu.print("yedit keybinds\ncontrol s: save\ncontrol q: quit\ncontrol g:\nsyntax highlighting\ncontrol r: refresh\nconfig");
 
+	ui_window dialogMenu;
+	dialogMenu.create(0, 0, 40, 3, "open file");
+	dialogMenu.print("type in the name of the file");
+
+	ui_textbar dialog;
+	dialog.create(1, 2, 39);
+
 	initscr();
 	start_color();
 	raw();
@@ -210,7 +225,7 @@ int main(int argc, const char* argv[]) {
 	}
 
 	nodelay(stdscr, true);
-	
+
 
 	init_pair(1, titlebar_fore, titlebar_back);
 	init_pair(2, editor_fore, editor_back);
@@ -221,6 +236,7 @@ int main(int argc, const char* argv[]) {
 	init_pair(7, win_fore, win_back);
 	init_pair(8, win_close, win_back);
 	init_pair(9, COLOR_BLACK, COLOR_BLACK);
+	init_pair(10, time_fore, time_back);
 
 	showAlert("Welcome to YEDIT.");
 
@@ -337,7 +353,9 @@ int main(int argc, const char* argv[]) {
 		move(1, 1);
 		printw("%s", fname.c_str());
 		move(0, maxx-currentTime().length());
+		attron(COLOR_PAIR(10));
 		printw("%s", currentTime().c_str());
+		attron(COLOR_PAIR(10));
 		// render alerts if there is one
 		if (alert) {
 			move((maxy-1)/2, (maxx/2)-(alertContent.length()/2));
@@ -358,56 +376,67 @@ int main(int argc, const char* argv[]) {
 			helpMenu.Move(maxx-22, maxy - helpMenu.h - 2);
 			helpMenu.render();
 		}
+		if (dialogInFocus) {
+			dialogMenu.render();
+			dialog.render();
+		}
 		++ frames;
 		refresh();
 		usleep(1000000/MAX_FPS);
 		// now input
 		in = getch();
+
+		if (!dialogInFocus) {
+			switch (in) {
+				case 10: {
+					if (countLines(fbuf.substr(0, curp))-scrollY >= maxy-2)
+						++ scrollY;
+				}
+				default: {
+					if ((in == 10) || (in == 9) || (in >= 32 && in <= 126)) {
+						fbuf.insert(curp, string(1, in));
+						++ curp;
+					};
+
+					break;
+				}
+				case KEY_LEFT: {
+					if (curp - 1 != -1) {
+						-- curp;
+					}
+					break;
+				}
+				case KEY_RIGHT: {
+					if (curp + 1 <= fbuf.length()) {
+						++ curp;
+					}
+					break;
+				}
+				case KEY_UP: {
+					if (scrollY-1 != -1)
+						-- scrollY;
+					break;
+				}
+				case KEY_DOWN: {
+					if (scrollY+1 <= countLines(fbuf))
+						++ scrollY;
+					break;
+				}
+				case 127: case KEY_BACKSPACE: {
+					if (curp-1 != -1) {
+						fbuf.erase(curp-1, 1);
+						-- curp;
+					}
+					break;
+				}
+			}
+		} else {
+			dialog.input(in);
+		}
 		switch (in) {
-			case 10: {
-				if (countLines(fbuf.substr(0, curp))-scrollY >= maxy-2)
-					++ scrollY;
-			}
-			default: {
-				if ((in == 10) || (in == 9) || (in >= 32 && in <= 126)) {
-					fbuf.insert(curp, string(1, in));
-					++ curp;
-				};
-					
-				break;
-			}
-			case KEY_LEFT: {
-				if (curp - 1 != -1) {
-					-- curp;
-				}
-				break;
-			}
-			case KEY_RIGHT: {
-				if (curp + 1 <= fbuf.length()) {
-					++ curp;
-				}
-				break;
-			}
-			case KEY_UP: {
-				if (scrollY-1 != -1)
-					-- scrollY;
-				break;
-			}
-			case KEY_DOWN: {
-				if (scrollY+1 <= countLines(fbuf))
-					++ scrollY;
-				break;
-			}
-			case 127: case KEY_BACKSPACE: {
-				if (curp-1 != -1) {
-					fbuf.erase(curp-1, 1);
-					-- curp;
-				}
-				break;
-			}
 			case ctrl('s'): {
-				ofile.open(fname);
-				if (true) {
+				if (fexists(fname)) {
+					ofile.open(fname);
 					ofile << fbuf.c_str();
 					ofile.close();
 					showAlert("Saved buffer to " +fname);
@@ -420,6 +449,34 @@ int main(int argc, const char* argv[]) {
 				run = false;
 				break;
 			}
+			case ctrl('l'): {
+				dialogInFocus = true;
+				dialog.Move(maxx / 2 - 19, maxy / 2);
+				dialogMenu.Move(maxx / 2 - 20, maxy / 2 - 2);
+				break;
+			};
+			case 10: {
+				if (dialogInFocus) {
+					dialogInFocus = false;
+					string lfname = dialog.content;
+					if (fexists(lfname)) {
+						fname = lfname;
+						fbuf = fread(lfname);
+						curp = 0;
+						curx = 0;
+						showAlert("Loaded file " +fname);
+					}
+					else {
+						fname = lfname;
+						fbuf = fread(lfname);
+						curp = 0;
+						curx = 0;
+						showAlert("Created empty buffer " +fname);
+					}
+				};
+
+				break;
+			};
 			case ctrl('g'): {
 				syntaxHighlighting = !syntaxHighlighting;
 				if (syntaxHighlighting)

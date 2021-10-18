@@ -29,7 +29,9 @@ bool settingsExist(const INI::Structure &settings) {
 		"titlebar_b",
 		"titlebar_f",
 		"alert_b",
-		"alert_f"
+		"alert_f",
+		"time_b",
+		"time_f"
 	};
 	vector <string> editor_props = {
 		"tab-width"
