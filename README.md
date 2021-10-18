@@ -14,6 +14,10 @@ cd yedit
 mkdir bin
 make
 ```
+# install
+```
+# sudo dpkg -i path/to/yedit.deb
+```
 # run
 ```
 ./bin/yedit
