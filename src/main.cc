@@ -189,6 +189,8 @@ int main(int argc, const char* argv[]) {
 		titlebar_fore = COLOR_BLACK;
 		alert_fore    = COLOR_BLACK;
 		alert_back    = COLOR_GREEN;
+		time_back     = COLOR_BLUE;
+		time_fore     = COLOR_WHITE;
 		tabWidth      = 4;
 	}
 	win_back      = COLOR_WHITE;
@@ -199,8 +201,8 @@ int main(int argc, const char* argv[]) {
 
 	// make windows
 	ui_window helpMenu; // = newWindow(0, 0, 20, 7, "help");
-	helpMenu.create(0, 0, 20, 8, "help");
-	helpMenu.print("yedit keybinds\ncontrol s: save\ncontrol q: quit\ncontrol g:\nsyntax highlighting\ncontrol r: refresh\nconfig");
+	helpMenu.create(0, 0, 20, 9, "help");
+	helpMenu.print("yedit keybinds\ncontrol s: save\ncontrol q: quit\ncontrol g:\nsyntax highlighting\ncontrol r: refresh\nconfig\ncontrol o: open");
 
 	ui_window dialogMenu;
 	dialogMenu.create(0, 0, 40, 3, "open file");
@@ -449,7 +451,7 @@ int main(int argc, const char* argv[]) {
 				run = false;
 				break;
 			}
-			case ctrl('l'): {
+			case ctrl('o'): {
 				dialogInFocus = true;
 				dialog.Move(maxx / 2 - 19, maxy / 2);
 				dialogMenu.Move(maxx / 2 - 20, maxy / 2 - 2);
@@ -471,7 +473,7 @@ int main(int argc, const char* argv[]) {
 						fbuf = fread(lfname);
 						curp = 0;
 						curx = 0;
-						showAlert("Created empty buffer " +fname);
+						showAlert("Created new file" +fname);
 					}
 				};
 
