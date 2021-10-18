@@ -8,9 +8,11 @@ include = ./lib
 pkgout  = yedit_0.7.2-1_amd64
 
 build: $(src) $(headers)
+	@mkdir -p bin
 	@$(cc) $(src) -o $(out) $(libs) -std=$(std) -I$(include)
 
 debug: $(src) $(headers)
+	@mkdir -p bin
 	@$(cc) $(src) -o $(out) $(libs) -std=$(std) -I$(include) -g
 
 run: $(out)
