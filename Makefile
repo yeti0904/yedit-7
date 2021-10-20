@@ -1,6 +1,7 @@
 cc      = g++
 out     = bin/yedit
 libs    = -lncurses -lstdc++fs
+flags   = -s
 src     = src/main.cc src/fs.cc src/ui.cc src/util.cc
 headers = src/colour.hh src/constants.hh src/editmode.hh src/fs.hh src/ui.hh src/util.hh
 std     = c++17
@@ -9,12 +10,12 @@ pkgout  = yedit_0.7.2-1_amd64
 
 build: $(src) $(headers)
 	@mkdir -p bin
-	@$(cc) $(src) -o $(out) $(libs) -std=$(std) -I$(include)
+	@$(cc) $(src) -o $(out) $(libs) -std=$(std) -I$(include) $(flags)
 
 debug: $(src) $(headers)
 	@mkdir -p bin
-	@$(cc) $(src) -o $(out) $(libs) -std=$(std) -I$(include) -g
-
+	@$(cc) $(src) -o $(out) $(libs) -std=$(std) -I$(include) $(flags) -g
+	
 run: $(out)
 	@./$(out)
 

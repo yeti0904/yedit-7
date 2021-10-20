@@ -21,6 +21,7 @@
 #include "win.hh"
 #include "txtbar.hh"
 #include "ui.hh"
+#include "dialogs.hh"
 using std::vector;
 using std::string;
 using std::ofstream;
@@ -82,29 +83,46 @@ void createDefaultConfig() {
 	}
 }
 
+string createDialog(ui_window &dialogMenu, dialogMode mode) {
+	dialogMenu.clear();
+	if (mode == open) {
+		dialogMenu.changeTitle("open file");
+		dialogMenu.print("type the path to the file");
+		return "Loaded file";
+	}
+	else if (mode == saveAs) {
+		dialogMenu.changeTitle("save file");
+		dialogMenu.print("type the path to save to");
+		return "Saved file";
+	}
+	return "";
+}
+
 int main(int argc, const char* argv[]) {
-	string   fname              = "Unnamed";
-	char     fnamec;
-	string   fbuf;
-	uint16_t maxx = 0, maxy = 0;
-	bool     run                = true; // condition for run loop
-	bool     renderCurs;
-	uint64_t curp               = 0;    // cursor position in file buffer
-	uint16_t curx               = 0, cury = 0;
-	uint16_t in;                        // input is temporarily stored here
-	string   instr;
-	uint64_t scrollY            = 0;
-	uint64_t lines, cols;
-	ofstream ofile;
-	editMode emode              = mode_txt;
-	uint8_t  tabWidth           = 4;
-	bool     syntaxHighlighting = false;
-	bool     inString           = false;
-	string   temp;
-	bool     renderedCursor     = false;
-	bool     renderHelpMenu     = false;
-	size_t   frames             = 0;
-	bool     dialogInFocus      = false;
+	string     fname              = "Unnamed";
+	char       fnamec;
+	string     fbuf;
+	uint16_t   maxx = 0, maxy = 0;
+	bool       run                = true; // condition for run loop
+	bool       renderCurs;
+	uint64_t   curp               = 0;    // cursor position in file buffer
+	uint16_t   curx               = 0, cury = 0;
+	uint16_t   in;                        // input is temporarily stored here
+	string     instr;
+	uint64_t   scrollY            = 0;
+	uint64_t   lines, cols;
+	ofstream   ofile;
+	editMode   emode              = mode_txt;
+	uint8_t    tabWidth           = 4;
+	bool       syntaxHighlighting = false;
+	bool       inString           = false;
+	string     temp;
+	bool       renderedCursor     = false;
+	bool       renderHelpMenu     = false;
+	size_t     frames             = 0;
+	bool       dialogInFocus      = false;
+	dialogMode modeDialog         = open;
+	string     dialogAlert        = "";
 
 	vector <string> args; // command line arguments
 	for (uint16_t i = 0; i<argc; ++i) {
@@ -205,8 +223,7 @@ int main(int argc, const char* argv[]) {
 	helpMenu.print("yedit keybinds\ncontrol s: save\ncontrol q: quit\ncontrol g:\nsyntax highlighting\ncontrol r: refresh\nconfig\ncontrol o: open");
 
 	ui_window dialogMenu;
-	dialogMenu.create(0, 0, 40, 3, "open file");
-	dialogMenu.print("type in the name of the file");
+	dialogMenu.create(0, 0, 40, 3, "test");
 
 	ui_textbar dialog;
 	dialog.create(1, 2, 39);
@@ -358,15 +375,6 @@ int main(int argc, const char* argv[]) {
 		attron(COLOR_PAIR(10));
 		printw("%s", currentTime().c_str());
 		attron(COLOR_PAIR(10));
-		// render alerts if there is one
-		if (alert) {
-			move((maxy-1)/2, (maxx/2)-(alertContent.length()/2));
-			attron(COLOR_PAIR(4));
-			printw("[ %s ]", alertContent.c_str());
-			alertDuration -= 1000/MAX_FPS;
-			if (alertDuration <= 0)
-				alert = false;
-		}
 		// titlebar
 		move(0, 0);
 		attroff(COLOR_PAIR(2));
@@ -382,6 +390,15 @@ int main(int argc, const char* argv[]) {
 			dialogMenu.render();
 			dialog.render();
 		}
+		// render alerts if there is one
+		if (alert && !dialogInFocus) {
+			move((maxy-1)/2, (maxx/2)-(alertContent.length()/2)-4);
+			attron(COLOR_PAIR(4));
+			printw("[ %s ]", alertContent.c_str());
+			alertDuration -= 1000/MAX_FPS;
+			if (alertDuration <= 0)
+				alert = false;
+		}
 		++ frames;
 		refresh();
 		usleep(1000000/MAX_FPS);
@@ -391,7 +408,7 @@ int main(int argc, const char* argv[]) {
 		if (!dialogInFocus) {
 			switch (in) {
 				case 10: {
-					if (countLines(fbuf.substr(0, curp))-scrollY >= maxy-2)
+					if (countLines(fbuf.substr(0, curp))-scrollY >= maxy-4)
 						++ scrollY;
 				}
 				default: {
@@ -437,14 +454,37 @@ int main(int argc, const char* argv[]) {
 		}
 		switch (in) {
 			case ctrl('s'): {
-				if (fexists(fname)) {
+				if (fname == "Unnamed") {
+					if (!dialogInFocus) {
+						modeDialog = saveAs;
+						dialogInFocus = true;
+						createDialog(dialogMenu, saveAs);
+						dialog.Move(maxx / 2 - 19, maxy / 2);
+						dialogMenu.Move(maxx / 2 - 20, maxy / 2 - 2);dialogInFocus = true;
+					}
+					else {
+						showAlert("You already have a dialog open");
+					}
+				}
+				else {
 					ofile.open(fname);
 					ofile << fbuf.c_str();
 					ofile.close();
 					showAlert("Saved buffer to " +fname);
 				}
-				else
-					showAlert("Error saving file");
+				break;
+			}
+			case ctrl('w'): {
+				if (!dialogInFocus) {
+					modeDialog = saveAs;
+					dialogInFocus = true;
+					createDialog(dialogMenu, saveAs);
+					dialog.Move(maxx / 2 - 19, maxy / 2);
+					dialogMenu.Move(maxx / 2 - 20, maxy / 2 - 2);dialogInFocus = true;
+				}
+				else {
+					showAlert("You already have a dialog open");
+				}
 				break;
 			}
 			case ctrl('q'): {
@@ -452,33 +492,45 @@ int main(int argc, const char* argv[]) {
 				break;
 			}
 			case ctrl('o'): {
-				dialogInFocus = true;
-				dialog.Move(maxx / 2 - 19, maxy / 2);
-				dialogMenu.Move(maxx / 2 - 20, maxy / 2 - 2);
+				if (!dialogInFocus) {
+					modeDialog = open;
+					createDialog(dialogMenu, open);
+					dialogInFocus = true;
+					dialog.Move(maxx / 2 - 19, maxy / 2);
+					dialogMenu.Move(maxx / 2 - 20, maxy / 2 - 2);
+				}
+				else {
+					showAlert("You already have a dialog open");
+				}
 				break;
 			};
 			case 10: {
 				if (dialogInFocus) {
 					dialogInFocus = false;
 					string lfname = dialog.content;
-					if (fexists(lfname)) {
-						fname = lfname;
-						fbuf = fread(lfname);
-						curp = 0;
-						curx = 0;
-						showAlert("Loaded file " +fname);
+					if (modeDialog == open) {
+						if (fexists(lfname)) {
+							fname = lfname;
+							fbuf = fread(lfname);
+							curp = 0;
+							curx = 0;
+							showAlert("Loaded file " +fname);
+						}
+						else {
+							showAlert("No such file");
+						}
 					}
-					else {
+					else if (modeDialog == saveAs) {
 						fname = lfname;
-						fbuf = fread(lfname);
-						curp = 0;
-						curx = 0;
-						showAlert("Created new file " +fname);
+						ofile.open(fname);
+						ofile << fbuf.c_str();
+						ofile.close();
+						showAlert("Saved file " + fname);
 					}
-				};
+				}
 
 				break;
-			};
+			}
 			case ctrl('g'): {
 				syntaxHighlighting = !syntaxHighlighting;
 				if (syntaxHighlighting)

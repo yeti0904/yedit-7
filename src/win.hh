@@ -30,8 +30,8 @@ class ui_window {
 		content = "";
 	}
 
-	void changeTitle(string title) {
-		title = title;
+	void changeTitle(string ttitle) {
+		title = ttitle;
 	}
 
 	void Move(uint16_t ax, uint16_t ay) {
