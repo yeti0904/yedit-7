@@ -106,7 +106,8 @@ int main(int argc, const char* argv[]) {
 	bool       run                = true; // condition for run loop
 	bool       renderCurs;
 	uint64_t   curp               = 0;    // cursor position in file buffer
-	uint16_t   curx               = 0, cury = 0;
+	uint16_t   curx, cury         = 0;
+	uint64_t   curu, curd = 0;
 	uint16_t   in;                        // input is temporarily stored here
 	string     instr;
 	uint64_t   scrollY            = 0;
@@ -114,7 +115,7 @@ int main(int argc, const char* argv[]) {
 	ofstream   ofile;
 	editMode   emode              = mode_txt;
 	uint8_t    tabWidth           = 4;
-	bool       syntaxHighlighting = false;
+	bool       codeMode           = false;
 	bool       inString           = false;
 	string     temp;
 	bool       renderedCursor     = false;
@@ -123,6 +124,11 @@ int main(int argc, const char* argv[]) {
 	bool       dialogInFocus      = false;
 	dialogMode modeDialog         = open;
 	string     dialogAlert        = "";
+	bool       linenumber         = false;
+
+	string loop = "\n";
+	loop += (char) 9;
+	loop += "\n}";
 
 	vector <string> args; // command line arguments
 	for (uint16_t i = 0; i<argc; ++i) {
@@ -152,7 +158,7 @@ int main(int argc, const char* argv[]) {
 					putchar('=');
 				}
 				putchar(10);
-				printf("Control Q: Quit yedit\nControl S: Save file buffer\nControl H: Enable experimental syntax highlighting\n");
+				printf("Control Q: Quit yedit\nControl S: Save file buffer\nControl G: Enable experimental code mode\n");
 				return 0;
 			}
 		}
@@ -198,6 +204,9 @@ int main(int argc, const char* argv[]) {
 		time_back     = settings.AsInteger("appearence", "time_b");
 		time_fore     = settings.AsInteger("appearence", "time_f");
 		tabWidth      = settings.AsInteger("editor", "tab-width");
+		if (settings.Contains("editor", "line-numbers")) {
+			linenumber = settings.AsBoolean("editor", "line-numbers");
+		}
 	}
 	else {
 		createDefaultConfig();
@@ -220,7 +229,7 @@ int main(int argc, const char* argv[]) {
 	// make windows
 	ui_window helpMenu; // = newWindow(0, 0, 20, 7, "help");
 	helpMenu.create(0, 0, 20, 9, "help");
-	helpMenu.print("yedit keybinds\ncontrol s: save\ncontrol q: quit\ncontrol g:\nsyntax highlighting\ncontrol r: refresh\nconfig\ncontrol o: open");
+	helpMenu.print("yedit keybinds\ncontrol s: save\ncontrol q: quit\ncontrol g:\ncode mode\ncontrol r: refresh\nconfig\ncontrol o: open");
 
 	ui_window dialogMenu;
 	dialogMenu.create(0, 0, 40, 3, "test");
@@ -308,7 +317,7 @@ int main(int argc, const char* argv[]) {
 				else {
 					attroff(COLOR_PAIR(3));
 					attron(COLOR_PAIR(2));
-					if (syntaxHighlighting) {
+					if (codeMode) {
 						if (((fbuf[i] == '"') || (fbuf[i] == '\'')) && (fbuf[i-1] != '\\')) {
 							inString = !inString;
 						}
@@ -415,6 +424,28 @@ int main(int argc, const char* argv[]) {
 					if ((in == 10) || (in == 9) || (in >= 32 && in <= 126)) {
 						fbuf.insert(curp, string(1, in));
 						++ curp;
+						if (codeMode) {
+							switch (in) {
+								case '\'':
+								case '"': {
+									fbuf.insert(curp, string(1, in));
+									break;
+								}
+								case '{': {
+									fbuf.insert(curp, loop);
+									curp += 2;
+									break;
+								}
+								case '(': {
+									fbuf.insert(curp, string(1, ')'));
+									break;
+								}
+								case '[': {
+									fbuf.insert(curp, string(1, ']'));
+									break;
+								}
+							}
+						}
 					};
 
 					break;
@@ -532,11 +563,11 @@ int main(int argc, const char* argv[]) {
 				break;
 			}
 			case ctrl('g'): {
-				syntaxHighlighting = !syntaxHighlighting;
-				if (syntaxHighlighting)
-					showAlert("Enabled syntax highlighting");
+				codeMode = !codeMode;
+				if (codeMode)
+					showAlert("Enabled code mode");
 				else
-					showAlert("Disabled syntax highlighting");
+					showAlert("Disabled code mode");
 				break;
 			}
 			case ctrl('h'): {
